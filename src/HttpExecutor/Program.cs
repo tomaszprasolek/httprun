@@ -60,20 +60,11 @@ namespace HttpExecutor
             var provider = services.BuildServiceProvider();
 
             var lineReader = provider.GetRequiredService<ITextFileLineReader>();
-            var console = provider.GetRequiredService<IConsole>();
-            var environment = provider.GetRequiredService<IEnvironment>();
+            IConsole console = provider.GetRequiredService<IConsole>();
+            IEnvironment environment = provider.GetRequiredService<IEnvironment>();
 
-            if (!System.IO.File.Exists(options.Filename))
-            {
-                console.WriteLine($"Script file not found.");
-                environment.Exit(-1);
-            }
-
-            if (!string.IsNullOrWhiteSpace(options.SettingsFile) && !System.IO.File.Exists(options.SettingsFile))
-            {
-                console.WriteLine($"Settings file not found.");
-                environment.Exit(-1);
-            }
+            // Additional validation
+            ValidateOptions(options, console, environment);
 
             var lines = await lineReader.ReadAllLinesAsync(options.Filename);
 
@@ -159,6 +150,29 @@ namespace HttpExecutor
             }
 
             environment.Exit(exitCode);
+        }
+
+        private static void ValidateOptions(IAppOptions options,
+            IConsole console,
+            IEnvironment environment)
+        {
+            if (!System.IO.File.Exists(options.Filename))
+            {
+                console.WriteLine($"Script file not found.");
+                environment.Exit(-1);
+            }
+
+            if (!string.IsNullOrWhiteSpace(options.SettingsFile) && !System.IO.File.Exists(options.SettingsFile))
+            {
+                console.WriteLine($"Settings file not found.");
+                environment.Exit(-1);
+            }
+
+            if (string.IsNullOrWhiteSpace(options.EnvironmentName))
+            {
+                console.WriteLine("Environment name not provider");
+                environment.Exit(-1);
+            }
         }
     }
 }
