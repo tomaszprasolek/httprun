@@ -9,6 +9,8 @@ using HttpExecutor.Abstractions;
 using HttpExecutor.Ioc;
 using HttpExecutor.Services;
 using Microsoft.Extensions.DependencyInjection;
+using Newtonsoft.Json.Linq;
+using System.IO;
 
 namespace HttpExecutor
 {
@@ -65,6 +67,8 @@ namespace HttpExecutor
 
             // Additional validation
             ValidateOptions(options, console, environment);
+
+            ReadSettingsFile(options);
 
             var lines = await lineReader.ReadAllLinesAsync(options.Filename);
 
@@ -152,17 +156,40 @@ namespace HttpExecutor
             environment.Exit(exitCode);
         }
 
+        private static void ReadSettingsFile(IAppOptions options)
+        {
+            string jsonPath = $"$.['rest-client.environmentVariables'].{options.EnvironmentName}";
+
+            string settingsFileContent = File.ReadAllText(options.SettingsFile);
+            
+            JObject jsonObject = JObject.Parse(settingsFileContent);
+            var settings = jsonObject.SelectToken(jsonPath);
+
+            if (settings == null)
+            {
+                // TODO: Exit application because not exist the environment variables 
+                return;
+            }
+
+            foreach (JToken s in settings)
+            {
+                // TODO: add value to some variables list
+                JProperty property = (JProperty) s;
+                Console.WriteLine($"Name: {property.Name}, value: {property.Value}");
+            }
+        }
+
         private static void ValidateOptions(IAppOptions options,
             IConsole console,
             IEnvironment environment)
         {
-            if (!System.IO.File.Exists(options.Filename))
+            if (!File.Exists(options.Filename))
             {
                 console.WriteLine($"Script file not found.");
                 environment.Exit(-1);
             }
 
-            if (!string.IsNullOrWhiteSpace(options.SettingsFile) && !System.IO.File.Exists(options.SettingsFile))
+            if (!string.IsNullOrWhiteSpace(options.SettingsFile) && !File.Exists(options.SettingsFile))
             {
                 console.WriteLine($"Settings file not found.");
                 environment.Exit(-1);
