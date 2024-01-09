@@ -25,5 +25,9 @@ namespace HttpExecutor.Abstractions
         bool TerminateOnFileAccessFailure { get; }
 
         bool SkipSslValidation { get; }
+
+        string SettingsFile { get; }
+
+        string EnvironmentName { get; }
     }
 }

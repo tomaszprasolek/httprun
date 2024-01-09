@@ -69,6 +69,12 @@ namespace HttpExecutor
                 environment.Exit(-1);
             }
 
+            if (!string.IsNullOrWhiteSpace(options.SettingsFile) && !System.IO.File.Exists(options.SettingsFile))
+            {
+                console.WriteLine($"Settings file not found.");
+                environment.Exit(-1);
+            }
+
             var lines = await lineReader.ReadAllLinesAsync(options.Filename);
 
             // TODO - abstract this
